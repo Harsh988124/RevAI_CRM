@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+
+from app.api.v1.companies import router as companies_router
 from app.core.config import settings
 from app.db.session import engine
 
@@ -21,6 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(companies_router, prefix="/api/v1")
 
 @app.get("/")
 def home():
