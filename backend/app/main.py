@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 from app.api.v1.companies import router as companies_router
+from app.api.v1.contacts import router as contacts_router
 from app.core.config import settings
 from app.db.session import engine
 
@@ -24,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(companies_router, prefix="/api/v1")
+app.include_router(contacts_router,prefix="/api/v1")
 
 @app.get("/")
 def home():
