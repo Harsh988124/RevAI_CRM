@@ -70,8 +70,13 @@ def get_company(company_id: int , db : DbSession):
         )
     return company
 
+
 @router.patch("/{company_id}", response_model=CompanyResponse)
-def update_company(company_id: int , payload : CompanyUpdate ,db : DbSession):
+def update_company(
+    company_id: int,
+    payload: CompanyUpdate,
+    db: DbSession,
+):
     company = db.get(Company, company_id)
 
     if company is None:
@@ -79,19 +84,35 @@ def update_company(company_id: int , payload : CompanyUpdate ,db : DbSession):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Company not found",
         )
-    updates = payload.model_dump(exclude_unset=True,mode="json")
+
+    updates = payload.model_dump(exclude_unset=True, mode="json")
+
+    # Reject an empty PATCH request.
+    if not updates:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Provide at least one field to update",
+        )
+
+    # The company name is required.
+    if "name" in updates and updates["name"] is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Company name cannot be null",
+        )
 
     for field, value in updates.items():
-        setattr(company, field,value)
+        setattr(company, field, value)
 
-        try:
-            db.commit()
-            db.refresh(company)
-        except Exception:
-            db.rollback()
-            raise
+    try:
+        db.commit()
+        db.refresh(company)
+    except Exception:
+        db.rollback()
+        raise
 
-        return company
+    return company
+
 
 @router.delete(
     "/{company_id}",
