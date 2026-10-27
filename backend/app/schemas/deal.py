@@ -18,16 +18,20 @@ DealStage = Literal[
 
 class DealBase(BaseModel):
     name: str = Field(min_length=1, max_length=200)
+
     amount: Decimal | None = Field(
         default=None,
         ge=0,
         max_digits=15,
         decimal_places=2,
     )
+
     stage: DealStage = "qualification"
     probability: int = Field(default=10, ge=0, le=100)
+
     expected_close_date: date | None = None
     description: str | None = None
+
     company_id: int | None = Field(default=None, gt=0)
     contact_id: int | None = Field(default=None, gt=0)
 
@@ -37,17 +41,25 @@ class DealCreate(DealBase):
 
 
 class DealUpdate(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=200)
+    name: str | None = Field(
+        default=None, min_length=1, max_length=200
+    )
+
     amount: Decimal | None = Field(
         default=None,
         ge=0,
         max_digits=15,
         decimal_places=2,
     )
+
     stage: DealStage | None = None
-    probability: int | None = Field(default=None, ge=0, le=100)
+    probability: int | None = Field(
+        default=None, ge=0, le=100
+    )
+
     expected_close_date: date | None = None
     description: str | None = None
+
     company_id: int | None = Field(default=None, gt=0)
     contact_id: int | None = Field(default=None, gt=0)
 

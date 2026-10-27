@@ -9,7 +9,7 @@ from sqlalchemy.pool import NullPool
 
 from app.db.base import Base
 from app.db.session import get_db
-import app.models.crm 
+import app.models  # noqa: F401
 from app.main import app
 
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
@@ -50,8 +50,45 @@ def reset_test_database():
     Base.metadata.drop_all(bind=test_engine)
 
 
+
+from types import SimpleNamespace
+
+from app.api.dependencies import get_current_user
+
+
 @pytest.fixture()
 def client(reset_test_database):
+    def override_get_db():
+        db = TestingSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    def override_get_current_user():
+        # Existing API tests run as an authenticated manager.
+        return SimpleNamespace(
+            id=1,
+            email="test-manager@example.com",
+            full_name="Test Manager",
+            role="manager",
+            is_active=True,
+        )
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = (
+        override_get_current_user
+    )
+
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()
+
+@pytest.fixture()
+def anonymous_client(reset_test_database):
+    # Database is available, but no authentication override is installed.
     def override_get_db():
         db = TestingSessionLocal()
         try:
